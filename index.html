@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baccarat Card Counting Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Auth Overlay Styles */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-container {
+            background: linear-gradient(135deg, #2d3436, #1e1e2f);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .auth-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .auth-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .auth-error {
+            color: var(--danger);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .auth-success {
+            color: var(--success);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .key-info {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .time-remaining {
+            margin-top: 1rem;
+            color: var(--warning);
+            font-weight: bold;
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Main Content Styles */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .balance-container {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .balance-label {
+            margin-right: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .balance-value {
+            font-weight: 600;
+            color: var(--warning);
+        }
+
+        .time-container {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-left: 1rem;
+        }
+
+        .time-label {
+            margin-right: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .time-value {
+            font-weight: 600;
+            color: var(--info);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .chart-area {
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .roadmap {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 5px;
+            margin-top: 1rem;
+        }
+
+        .cell {
+            width: 30px; /* Slightly larger for score */
+            height: 30px; /* Slightly larger for score */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.8rem; /* Adjust font size for score */
+            background-color: rgba(255,255,255,0.1); /* Default for numbers */
+        }
+
+        /* No specific colors for player/banker/tie cells in roadmap, just the number */
+        .cell.predicted-player {
+            background-color: var(--info);
+            box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
+        }
+
+        .cell.predicted-banker {
+            background-color: var(--danger);
+            box-shadow: 0 0 15px rgba(214, 48, 49, 0.5);
+        }
+
+        .cell.predicted-tie {
+            background-color: var(--warning);
+            color: var(--dark);
+            box-shadow: 0 0 15px rgba(253, 203, 110, 0.5);
+        }
+
+        .cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .analysis-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Message Container for fixed positioning */
+        .message-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            z-index: 100;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
+        .message-box {
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: auto; /* Re-enable pointer events for the box itself */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .message-box.error {
+            background-color: rgba(214, 48, 49, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .message-box.success {
+            background-color: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .message-box.show {
+            display: block;
+            opacity: 1;
+        }
+
+
+        .bet-recommendation {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .recommendation-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-bet {
+            color: var(--danger);
+        }
+
+        .bet-suggestion {
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--success); }
+            100% { opacity: 0.8; }
+        }
+
+        .bet-amount {
+            font-size: 0.9rem;
+            color: var(--warning);
+        }
+
+        .count-info { /* Renamed from score-index-info */
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .count-title { /* Renamed from score-index-title */
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .count-value { /* Renamed from score-index-value */
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .count-desc { /* Renamed from score-index-desc */
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .player-stat {
+            color: var(--info);
+        }
+
+        .banker-stat {
+            color: var(--danger);
+        }
+
+        .tie-stat {
+            color: var(--warning);
+        }
+
+        .input-controls { /* New container for input and card buttons */
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns for card buttons */
+            gap: 0.5rem; /* Reduced gap for more buttons */
+            margin-bottom: 1.5rem;
+        }
+
+        .card-btn { /* Style for card input buttons */
+            padding: 0.8rem 0.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .card-btn:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-calculate {
+            background: var(--success);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-top: 1rem; /* Added margin-top to separate from card buttons */
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-calculate:hover {
+            background: #00a884;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+        }
+
+        .clear-btn-container {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+        }
+
+
+        .history-container {
+            margin-top: auto;
+        }
+
+        .history-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-list {
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-outcome.player {
+            color: var(--info);
+        }
+
+        .history-outcome.banker {
+            color: var(--danger);
+        }
+
+        .history-outcome.tie {
+            color: var(--warning);
+        }
+
+        /* Animations */
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-glow {
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+            to { box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .balance-container, .time-container {
+                margin-left: 0;
+            }
+
+            .roadmap {
+                grid-template-columns: repeat(10, 1fr); /* Adjust for smaller screens */
+            }
+
+            .input-controls {
+                grid-template-columns: repeat(3, 1fr); /* Adjust for smaller screens */
+            }
+
+            .message-container {
+                top: auto;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <h1 class="auth-title">Baccarat AI Access</h1>
+            <input type="text" class="auth-input" id="authKeyInput" placeholder="Enter your access key">
+            <button class="auth-btn" id="authSubmitBtn">Authenticate</button>
+            <div class="auth-error" id="authError">Invalid key or key already in use on another device</div>
+            <div class="auth-success" id="authSuccess">Authentication successful! Loading...</div>
+            <div class="time-remaining" id="timeRemaining"></div>
+            <div class="key-info">
+                <p>You need a valid access key to use this tool. Each key is limited to one device.</p>
+                <p>Keys expire after the time limit shown after authentication.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="message-container">
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <div class="container" id="mainContent">
+        <header>
+            <div class="logo">
+                BAC<span>AI</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="balance-container">
+                    <span class="balance-label">Balance:</span>
+                    <span class="balance-value">$10,000</span>
+                </div>
+                <div class="time-container" id="timeContainer">
+                    <span class="time-label">Time Left:</span>
+                    <span class="time-value" id="timeValue">00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Baccarat Card Sequence</div>
+                    <div class="chart-controls">
+                        <button class="control-btn">Big Road</button>
+                        <button class="control-btn">Bead Plate</button>
+                        <button class="control-btn">Derivative</button>
+                    </div>
+                </div>
+
+                <div class="chart-area" id="chartArea">
+                </div>
+
+                <div class="roadmap" id="roadmap">
+                </div>
+            </div>
+
+            <div class="analysis-panel">
+                <h2 class="panel-title">Card Counting Analysis</h2>
+
+                <div class="bet-recommendation" id="betRecommendation">
+                    <div class="recommendation-text no-bet">Enter cards to see prediction</div>
+                    <div class="bet-amount" id="betAmount"></div>
+                </div>
+
+                <div class="count-info">
+                    <div class="count-title">Current Running Count: <span id="countResultValue">0</span></div>
+                    <div class="count-desc" id="countDesc">This is the numerical result from the counting system.</div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-box player-stat">
+                        <div class="stat-value" id="playerBets">0</div>
+                        <div class="stat-label">Player Bets</div>
+                    </div>
+                    <div class="stat-box banker-stat">
+                        <div class="stat-value" id="bankerBets">0</div>
+                        <div class="stat-label">Banker Bets</div>
+                    </div>
+                    <div class="stat-box tie-stat">
+                        <div class="stat-value" id="tieBets">0</div>
+                        <div class="stat-label">Tie Bets</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalEntries">0</div>
+                        <div class="stat-label">Total Cards Entered</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="entriesNeeded">--</div>
+                        <div class="stat-label">Cards Needed (N/A)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="decksRemaining">--</div>
+                        <div class="stat-label">Decks Remaining (Est.)</div>
+                    </div>
+                </div>
+
+                <div class="input-controls">
+                    <button class="card-btn" data-card-value="A">A</button>
+                    <button class="card-btn" data-card-value="2">2</button>
+                    <button class="card-btn" data-card-value="3">3</button>
+                    <button class="card-btn" data-card-value="4">4</button>
+                    <button class="card-btn" data-card-value="5">5</button>
+                    <button class="card-btn" data-card-value="6">6</button>
+                    <button class="card-btn" data-card-value="7">7</button>
+                    <button class="card-btn" data-card-value="8">8</button>
+                    <button class="card-btn" data-card-value="9">9</button>
+                    <button class="card-btn" data-card-value="10">10/Face</button>
+                </div>
+                <div class="clear-btn-container">
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+
+                <div class="history-container">
+                    <div class="history-title">Prediction History</div>
+                    <div class="history-list" id="historyList">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // =============================================
+            // STRICT One-Device-Per-Key Authentication with Minute-Based Expiration
+            // =============================================
+            const authOverlay = document.getElementById('authOverlay');
+            const mainContent = document.getElementById('mainContent');
+            const authKeyInput = document.getElementById('authKeyInput');
+            const authSubmitBtn = document.getElementById('authSubmitBtn');
+            const authError = document.getElementById('authError');
+            const authSuccess = document.getElementById('authSuccess');
+            const timeRemaining = document.getElementById('timeRemaining');
+            const timeValue = document.getElementById('timeValue');
+            const timeContainer = document.getElementById('timeContainer');
+
+            // Predefined valid keys with expiration periods (in minutes)
+            const validKeys = {
+                "BAC-AI-2024-K1X7": { expiresIn: 121212121 },    // 60 minutes (1 hour)
+                "TBD": { expiresIn: 2880 },   // 1440 minutes (24 hours)
+                "BAC-AI-GOATED-A226": { expiresIn: 20480 },      // 30 minutes
+                "BAC-AI-2025-P9Y22": { expiresIn: 24480 },     // 120 minutes (2 hours)
+                "TBD FOR BUYERS": { expiresIn: 180 },     // 180 minutes (3 hours)
+                "TBD FOR BUYERS": { expiresIn: 15 },      // 15 minutes
+                "TBD FOR BUYERS": { expiresIn: 240 },     // 240 minutes (4 hours)
+                "TBD FOR BUYERS": { expiresIn: 480 },     // 480 minutes (8 hours)
+                "TBD FOR BUYERS": { expiresIn: 720 },     // 720 minutes (12 hours)
+                "TBD FOR BUYERS": { expiresIn: 1440 },    // 1440 minutes (24 hours)
+                "TBD FOR BUYERS": { expiresIn: 480 },     // 480 minutes (8 hours)
+            };
+
+            // Check if a key is expired
+            function isKeyExpired(keyInfo) {
+                if (!keyInfo || !keyInfo.firstUsed) return true;
+
+                const expirationDate = new Date(keyInfo.firstUsed);
+                expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
+
+                return new Date() > expirationDate;
+            }
+
+            // Format time as MM:SS
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            // Calculate remaining time in seconds
+            function getRemainingTime(keyInfo) {
+                if (!keyInfo || !keyInfo.firstUsed) return 0;
+
+                const expirationDate = new Date(keyInfo.firstUsed);
+                expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
+                const now = new Date();
+
+                return Math.max(0, Math.floor((expirationDate - now) / 1000));
+            }
+
+            // Enhanced device fingerprinting
+            async function getDeviceFingerprint() {
+                const components = [
+                    navigator.userAgent,
+                    navigator.platform,
+                    navigator.hardwareConcurrency || 'unknown',
+                    screen.width + 'x' + screen.height,
+                    new Date().getTimezoneOffset(),
+                    navigator.languages.join(','),
+                    !!navigator.pdfViewerEnabled,
+                    navigator.maxTouchPoints || 'unknown'
+                ];
+
+                // Check for deviceMemory before adding to components
+                if (navigator.deviceMemory) {
+                    components.splice(4, 0, navigator.deviceMemory); // Insert at index 4
+                } else {
+                    components.splice(4, 0, 'unknown'); // Insert 'unknown' if not available
+                }
+
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('BaccaratAI', 2, 15);
+                ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+                ctx.fillText('BaccaratAI', 4, 17);
+                const canvasData = canvas.toDataURL();
+
+                let webglData = 'unsupported';
+                try {
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        webglData = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) + '|' +
+                                   gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    }
+                } catch (e) {}
+
+                const combined = components.join('|') + '|' + canvasData + '|' + webglData;
+                const msgBuffer = new TextEncoder().encode(combined);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                return 'fp-' + hashHex;
+            }
+
+            // Authentication handler with expiration check
+            authSubmitBtn.addEventListener('click', async function() {
+                const enteredKey = authKeyInput.value.trim();
+
+                if (!validKeys.hasOwnProperty(enteredKey)) {
+                    authError.textContent = "Invalid access key";
+                    authError.style.display = 'block';
+                    authKeyInput.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        authKeyInput.classList.remove('animate__shakeX');
+                    }, 1000);
+                    return;
+                }
+
+                // Get or create key registry
+                let keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                const deviceFingerprint = await getDeviceFingerprint();
+
+                // Key is being used for the first time
+                if (!keyRegistry[enteredKey]) {
+                    keyRegistry[enteredKey] = {
+                        fingerprint: deviceFingerprint,
+                        firstUsed: new Date().toISOString(),
+                        lastUsed: new Date().toISOString(),
+                        expiresIn: validKeys[enteredKey].expiresIn
+                    };
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                }
+                // Key is already registered to this device - check expiration
+                else if (keyRegistry[enteredKey].fingerprint === deviceFingerprint) {
+                    if (isKeyExpired(keyRegistry[enteredKey])) {
+                        authError.textContent = "This key has expired. Please renew your subscription.";
+                        authError.style.display = 'block';
+                        authKeyInput.classList.add('animate__shakeX');
+                        setTimeout(() => {
+                            authKeyInput.classList.remove('animate__shakeX');
+                        }, 1000);
+                        return;
+                    }
+
+                    keyRegistry[enteredKey].lastUsed = new Date().toISOString();
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                }
+                // Key is registered to a different device
+                else {
+                    authError.textContent = "This key is already in use on another device";
+                    authError.style.display = 'block';
+                    authKeyInput.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        authKeyInput.classList.remove('animate__shakeX');
+                    }, 1000);
+                    return;
+                }
+
+                // Store successful authentication
+                localStorage.setItem('baccaratAuthKey', enteredKey);
+                localStorage.setItem('baccaratAuthFingerprint', deviceFingerprint);
+
+                // Show success and remaining time
+                const remainingTime = getRemainingTime(keyRegistry[enteredKey]);
+                const minutes = Math.floor(remainingTime / 60);
+                const hours = Math.floor(minutes / 60);
+                const displayTime = hours > 0 ?
+                    `${hours} hour${hours !== 1 ? 's' : ''} ${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}` :
+                    `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+
+                timeRemaining.textContent = `This key expires in ${displayTime}`;
+                timeRemaining.style.display = 'block';
+
+                authError.style.display = 'none';
+                authSuccess.style.display = 'block';
+                this.disabled = true;
+
+                // Transition to main content
+                setTimeout(() => {
+                    authOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        authOverlay.style.display = 'none';
+                        mainContent.style.display = 'block';
+                        initApp(enteredKey);
+                    }, 500);
+                }, 1500);
+            });
+
+            // Check for existing auth on page load with expiration check
+            async function checkExistingAuth() {
+                const savedKey = localStorage.getItem('baccaratAuthKey');
+                const savedFingerprint = localStorage.getItem('baccaratAuthFingerprint');
+
+                if (!savedKey || !savedFingerprint) {
+                    return false;
+                }
+
+                const currentFingerprint = await getDeviceFingerprint();
+                if (savedFingerprint !== currentFingerprint) {
+                    localStorage.removeItem('baccaratAuthKey');
+                    localStorage.removeItem('baccaratAuthFingerprint');
+                    return false;
+                }
+
+                const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                const keyInfo = keyRegistry[savedKey];
+
+                if (keyInfo && keyInfo.fingerprint === currentFingerprint) {
+                    if (isKeyExpired(keyInfo)) {
+                        // Clear authentication and show expired message
+                        localStorage.removeItem('baccaratAuthKey');
+                        localStorage.removeItem('baccaratAuthFingerprint');
+
+                        authOverlay.style.display = 'flex';
+                        authError.textContent = "Your access key has expired. Please renew your subscription.";
+                        authError.style.display = 'block';
+                        authKeyInput.value = savedKey;
+                        return false;
+                    }
+
+                    keyInfo.lastUsed = new Date().toISOString();
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry)); // Corrected this line
+
+                    authOverlay.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    initApp(savedKey);
+                    return true;
+                }
+
+                return false;
+            }
+
+            // =============================================
+            // Baccarat Card Counting Analyzer Functionality
+            // =============================================
+            function initApp(activeKey) {
+                // Game state
+                const gameState = {
+                    entries: [], // Stores the raw card values entered (e.g., 'A', '2', '10')
+                    predictionHistory: [], // Stores the results of predictions
+                    balance: 10000,
+                    chart: null,
+                    activeKey: activeKey,
+                    timer: null,
+                    totalDecks: 8, // Assuming 8 decks in a Baccarat shoe
+                    cardsDealt: 0 // Track total cards dealt to estimate decks remaining
+                };
+
+                // DOM elements
+                const elements = {
+                    roadmap: document.getElementById('roadmap'),
+                    chartArea: document.getElementById('chartArea'),
+                    betRecommendation: document.getElementById('betRecommendation'),
+                    betAmount: document.getElementById('betAmount'),
+                    countResultValue: document.getElementById('countResultValue'),
+                    countDesc: document.getElementById('countDesc'),
+                    playerBets: document.getElementById('playerBets'),
+                    bankerBets: document.getElementById('bankerBets'),
+                    tieBets: document.getElementById('tieBets'),
+                    totalEntries: document.getElementById('totalEntries'),
+                    entriesNeeded: document.getElementById('entriesNeeded'),
+                    decksRemaining: document.getElementById('decksRemaining'), // New display for decks remaining
+                    cardButtons: document.querySelectorAll('.card-btn'), // Select all card buttons
+                    clearBtn: document.getElementById('clearBtn'),
+                    historyList: document.getElementById('historyList'),
+                    balanceValue: document.querySelector('.balance-value'),
+                    timeValue: document.getElementById('timeValue'),
+                    messageBox: document.getElementById('messageBox')
+                };
+
+                /**
+                 * Displays a temporary message in the message box.
+                 * @param {string} message The message to display.
+                 * @param {'success'|'error'} type The type of message (determines styling).
+                 */
+                function displayMessage(message, type) {
+                    elements.messageBox.textContent = message;
+                    elements.messageBox.className = `message-box show ${type}`; // Add 'show' class to display
+
+                    // Hide the message after 3 seconds
+                    setTimeout(() => {
+                        elements.messageBox.classList.remove('show');
+                        elements.messageBox.textContent = ''; // Clear text
+                    }, 3000);
+                }
+
+                // Start the countdown timer
+                function startTimer() {
+                    const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                    const keyInfo = keyRegistry[gameState.activeKey];
+
+                    if (!keyInfo) return;
+
+                    // Clear any existing timer
+                    if (gameState.timer) {
+                        clearInterval(gameState.timer);
+                    }
+
+                    // Update immediately
+                    updateTimerDisplay();
+
+                    // Update every second
+                    gameState.timer = setInterval(() => {
+                        const remaining = updateTimerDisplay();
+
+                        if (remaining <= 0) {
+                            clearInterval(gameState.timer);
+                            handleKeyExpiration();
+                        }
+                    }, 1000);
+                }
+
+                // Update the timer display and return remaining seconds
+                function updateTimerDisplay() {
+                    const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                    const keyInfo = keyRegistry[gameState.activeKey];
+
+                    if (!keyInfo) return 0;
+
+                    const remaining = getRemainingTime(keyInfo);
+                    elements.timeValue.textContent = formatTime(remaining);
+
+                    // Change color when time is running low
+                    if (remaining <= 300) { // 5 minutes or less
+                        elements.timeValue.style.color = 'var(--danger)';
+                        timeContainer.classList.add('animate-glow');
+                    } else if (remaining <= 900) { // 15 minutes or less
+                        elements.timeValue.style.color = 'var(--warning)';
+                        timeContainer.classList.remove('animate-glow');
+                    } else {
+                        elements.timeValue.style.color = 'var(--info)';
+                        timeContainer.classList.remove('animate-glow');
+                    }
+
+                    return remaining;
+                }
+
+                // Handle key expiration
+                function handleKeyExpiration() {
+                    // Clear authentication
+                    localStorage.removeItem('baccaratAuthKey');
+                    localStorage.removeItem('baccaratAuthFingerprint');
+
+                    // Show auth overlay with expiration message
+                    mainContent.style.display = 'none';
+                    authOverlay.style.display = 'flex';
+                    authOverlay.style.opacity = '1';
+                    authError.textContent = "Your access key has expired. Please renew your subscription.";
+                    authError.style.display = 'block';
+                    authKeyInput.value = gameState.activeKey;
+                    timeRemaining.style.display = 'none';
+                }
+
+                /**
+                 * Converts a card value (string) to its numerical representation for counting.
+                 * @param {string} cardValue The card value as a string (e.g., 'A', '2', '10').
+                 * @returns {number} The numerical value of the card (1-9, 10 for face cards).
+                 */
+                function getNumericalCardValue(cardValue) {
+                    if (cardValue === 'A') return 1;
+                    if (cardValue === '10') return 10; // For 10/Face
+                    return parseInt(cardValue); // For 2-9
+                }
+
+                /**
+                 * Calculates the count contribution of a single card.
+                 * @param {string} cardValue The card value as a string (e.g., 'A', '2', '10').
+                 * @returns {number} The count adjustment for the card.
+                 */
+                function getCardCountContribution(cardValue) {
+                    const num = getNumericalCardValue(cardValue);
+                    if (num === 1) return -1; // Aces are -1
+                    if (num === 2 || num === 3) return -1; // 2 and 3 are -1
+                    if (num === 4 || num === 5) return -5; // 4 and 5 are -5
+                    if (num === 6 || num === 7) return +5; // 6 and 7 are +5
+                    if (num === 8 || num === 9) return +1; // 8 and 9 are +1
+                    if (num === 10) return 0; // 10 - K are 0
+                    return 0; // Should not happen with valid inputs
+                }
+
+                /**
+                 * Calculates the current running count based on all entered cards.
+                 * @returns {number} The current running count.
+                 */
+                function calculateRunningCount() {
+                    let totalCount = 0;
+                    gameState.entries.forEach(card => {
+                        totalCount += getCardCountContribution(card);
+                    });
+                    return totalCount;
+                }
+
+                /**
+                 * Determines the prediction (Banker, Player, Tie) based on the running count.
+                 * @returns {{prediction: string, countResult: number}} The prediction and the count result.
+                 */
+                function getPrediction() {
+                    const currentCount = calculateRunningCount();
+
+                    let prediction = "No Prediction";
+                    if (currentCount === 0) {
+                        prediction = "tie";
+                    } else if (currentCount % 2 !== 0) { // Odd count
+                        prediction = "banker";
+                    } else { // Even count
+                        prediction = "player";
+                    }
+
+                    return { prediction: prediction, countResult: currentCount };
+                }
+
+                // Initialize chart
+                function initChart() {
+                    const ctx = document.createElement('canvas');
+                    elements.chartArea.appendChild(ctx);
+
+                    // Get CSS variables
+                    const style = getComputedStyle(document.documentElement);
+                    const primaryColor = style.getPropertyValue('--primary').trim();
+                    const primaryColorRgba = `rgba(${parseInt(primaryColor.slice(1,3), 16)}, ${parseInt(primaryColor.slice(3,5), 16)}, ${parseInt(primaryColor.slice(5,7), 16)}, 0.1)`;
+
+                    gameState.chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [
+                                {
+                                    label: 'Running Count',
+                                    data: [],
+                                    borderColor: primaryColor,
+                                    backgroundColor: primaryColorRgba,
+                                    tension: 0.4,
+                                    borderWidth: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        color: '#fff',
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#fff'
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#fff'
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 1000,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                }
+
+                // Update chart with new data (showing count result over time)
+                function updateChart() {
+                    const labels = [];
+                    const countData = [];
+
+                    // Use the running count after each card entry for the chart
+                    let tempCount = 0;
+                    gameState.entries.forEach((card, index) => {
+                        labels.push(`Card ${index + 1}`);
+                        tempCount += getCardCountContribution(card);
+                        countData.push(tempCount);
+                    });
+
+                    gameState.chart.data.labels = labels;
+                    gameState.chart.data.datasets[0].data = countData;
+                    gameState.chart.update();
+                }
+
+                // Generate roadmap cells with entered cards
+                function updateRoadmap() {
+                    elements.roadmap.innerHTML = '';
+
+                    gameState.entries.forEach((card, index) => {
+                        const cell = document.createElement('div');
+                        cell.className = `cell`; // Default cell style
+                        cell.textContent = card === '10' ? '10/F' : card; // Display '10/F' for 10/Face cards
+                        cell.style.animationDelay = `${index * 0.1}s`;
+                        cell.classList.add('animate-pop');
+
+                        // Optionally, highlight cells that were part of a prediction
+                        // For automatic updates, we'll just show the last prediction
+                        const predictionResult = getPrediction(); // Get current prediction
+                        if (predictionResult && index === gameState.entries.length -1) { // Only highlight the last card entered
+                             const prediction = predictionResult.prediction;
+                            if (prediction === 'player') {
+                                cell.classList.add('predicted-player');
+                            } else if (prediction === 'banker') {
+                                cell.classList.add('predicted-banker');
+                            } else if (prediction === 'tie') {
+                                cell.classList.add('predicted-tie');
+                            }
+                            cell.title = `Card ${index + 1}: ${card} (Current Prediction: ${prediction.toUpperCase()})`;
+                        } else {
+                             cell.title = `Card ${index + 1}: ${card}`;
+                        }
+
+                        elements.roadmap.appendChild(cell);
+
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            cell.classList.remove('animate-pop');
+                        }, 400);
+                    });
+                }
+
+                // Update statistics
+                function updateStats() {
+                    const playerBets = gameState.predictionHistory.filter(p => p.prediction === 'player').length;
+                    const bankerBets = gameState.predictionHistory.filter(p => p.prediction === 'banker').length;
+                    const tieBets = gameState.predictionHistory.filter(p => p.prediction === 'tie').length;
+
+                    elements.playerBets.textContent = playerBets;
+                    elements.bankerBets.textContent = bankerBets;
+                    elements.tieBets.textContent = tieBets;
+                    elements.totalEntries.textContent = gameState.entries.length;
+
+                    // Calculate decks remaining
+                    const totalCardsInShoe = gameState.totalDecks * 52;
+                    const cardsRemaining = totalCardsInShoe - gameState.entries.length;
+                    const decksRemaining = (cardsRemaining / 52).toFixed(2);
+                    elements.decksRemaining.textContent = decksRemaining;
+
+                    // entriesNeeded is no longer a hard requirement for prediction, but can show total cards entered
+                    elements.entriesNeeded.textContent = gameState.entries.length;
+
+                    // Update current count display
+                    elements.countResultValue.textContent = calculateRunningCount();
+                }
+
+                // Update history list with predictions
+                function updateHistory() {
+                    elements.historyList.innerHTML = '';
+
+                    gameState.predictionHistory.slice().reverse().forEach((item, index) => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+
+                        const predictionNum = document.createElement('span');
+                        predictionNum.textContent = `Prediction ${gameState.predictionHistory.length - index}`;
+
+                        const result = document.createElement('span');
+                        result.className = `history-outcome ${item.prediction}`;
+                        let outcomeText = item.prediction.charAt(0).toUpperCase() + item.prediction.slice(1);
+                        if (item.countResult !== null) {
+                            outcomeText += ` (Count: ${item.countResult})`;
+                        }
+                        result.textContent = outcomeText;
+
+                        historyItem.appendChild(predictionNum);
+                        historyItem.appendChild(result);
+                        elements.historyList.appendChild(historyItem);
+                    });
+                }
+
+                // Update recommendation based on the running count
+                function updateRecommendation() {
+                    const predictionResult = getPrediction();
+                    const recommendationTextElement = elements.betRecommendation.querySelector('.recommendation-text');
+                    const betAmountElement = elements.betAmount;
+                    const countResultValueElement = elements.countResultValue;
+                    const countDescElement = elements.countDesc;
+
+                    if (gameState.entries.length < 1) { // No cards entered yet
+                        recommendationTextElement.textContent = "Enter cards to see prediction";
+                        recommendationTextElement.className = "recommendation-text no-bet";
+                        betAmountElement.textContent = "";
+                        countResultValueElement.textContent = "0";
+                        countDescElement.textContent = "This is the numerical result from the counting system.";
+                        elements.betRecommendation.classList.remove('animate-glow');
+                        return;
+                    }
+
+                    const countResult = predictionResult.countResult;
+                    const absCount = Math.abs(countResult); // For count categories
+
+                    let betMessage = `Bet ${predictionResult.prediction.charAt(0).toUpperCase() + predictionResult.prediction.slice(1)}`;
+                    if (countResult !== null) {
+                        betMessage += ` (Count: ${countResult})`;
+                    }
+
+                    recommendationTextElement.textContent = betMessage;
+                    recommendationTextElement.className = "recommendation-text bet-suggestion";
+
+                    const minBet = Math.floor(gameState.balance * 0.005);
+                    const maxBet = Math.floor(gameState.balance * 0.02);
+                    betAmountElement.textContent = `($${minBet} - $${maxBet})`;
+
+                    countResultValueElement.textContent = countResult !== null ? countResult : 'N/A';
+
+                    let description = "This is the numerical result from the counting system.";
+                    if (countResult === 0) {
+                        description = "Count is 0: Bet Tie or just dont bet this round";
+                    } else if (absCount === 1) {
+                        description = "Count is 1 (or -1): Perfect 1% ahead of the house.";
+                    } else if (absCount >= 2 && absCount <= 5) {
+                        description = "Count is 2-5 (or -2 to -5): Low Rise.";
+                    } else if (absCount >= 6 && absCount <= 9) {
+                        description = "Count is 6-9 (or -6 to -9): Mid Rise.";
+                    } else if (absCount >= 10 && absCount <= 14) {
+                        description = "Count is 10-14 (or -10 to -14): High Rise high chance for 7 and 8 and 9.";
+                    } else if (absCount >= 15) {
+                        description = "Count is 15+ (or -15+): Solid high chance for  8 or 9 hand outcome).";
+                    }
+                    countDescElement.textContent = description;
+
+                    elements.betRecommendation.classList.add('animate-glow');
+                    setTimeout(() => {
+                        elements.betRecommendation.classList.remove('animate-glow');
+                    }, 2000);
+
+                    // Store prediction in history only when a new prediction is made based on the current count
+                    // We'll store it here for simplicity, assuming each card entry *could* lead to a new prediction
+                    // For now, we'll log the current prediction after each card entry
+                    gameState.predictionHistory.push({
+                        prediction: predictionResult.prediction,
+                        countResult: predictionResult.countResult,
+                        // startIndex and endIndex are less relevant here as it's a running count
+                        startIndex: gameState.entries.length - 1,
+                        endIndex: gameState.entries.length - 1
+                    });
+                    updateHistory();
+                    updateChart(); // Update chart with new prediction point
+                }
+
+
+                // Add new card entry
+                function addCardEntry(cardValue) {
+                    gameState.entries.push(cardValue);
+                    updateStats();
+                    updateRoadmap(); // Update roadmap to show new entry
+                    updateRecommendation(); // Trigger recommendation update automatically
+                    displayMessage(`Card ${cardValue} added.`, 'success');
+                }
+
+                // Clear all history and reset state
+                function clearAll() {
+                    gameState.entries = [];
+                    gameState.predictionHistory = [];
+                    gameState.cardsDealt = 0; // Reset cards dealt
+
+                    // Reset all UI components
+                    updateRoadmap();
+                    updateChart();
+                    updateStats();
+                    updateHistory();
+
+                    // Reset recommendation display
+                    elements.betRecommendation.querySelector('.recommendation-text').textContent = "Enter cards to see prediction";
+                    elements.betRecommendation.querySelector('.recommendation-text').className = "recommendation-text no-bet";
+                    elements.betAmount.textContent = "";
+                    elements.countResultValue.textContent = "0";
+                    elements.countDesc.textContent = "This is the numerical result from the counting system.";
+
+                    // Add clear animation
+                    elements.chartArea.classList.add('animate__fadeOut');
+                    setTimeout(() => {
+                        elements.chartArea.classList.remove('animate__fadeOut');
+                        elements.chartArea.classList.add('animate__fadeIn');
+                        setTimeout(() => {
+                            elements.chartArea.classList.remove('animate__fadeIn');
+                        }, 500);
+                    }, 500);
+                    displayMessage('All data cleared.', 'success');
+                }
+
+                // Event listeners for card buttons
+                elements.cardButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const cardValue = this.dataset.cardValue;
+                        addCardEntry(cardValue);
+                        this.classList.add('animate__rubberBand');
+                        setTimeout(() => {
+                            this.classList.remove('animate__rubberBand');
+                        }, 1000);
+                    });
+                });
+
+                elements.clearBtn.addEventListener('click', function() {
+                    clearAll();
+                    this.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        this.classList.remove('animate__shakeX');
+                    }, 1000);
+                });
+
+                // Initialize the app
+                function init() {
+                    initChart();
+                    startTimer();
+
+                    // Add some sample data for the new system (raw card values)
+                    // This sequence should result in a Tie bet (0,1 at the end of the last 12)
+                    const sampleEntries = [
+                        'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', '2', // 12 cards
+                        '3', '4', '5', '6', '7', '8', '9', '10', 'A', '2', '3', '4' // another 12 cards
+                    ];
+                    sampleEntries.forEach(card => {
+                        // Directly add cards to entries, update UI later
+                        gameState.entries.push(card);
+                    });
+
+                    // After all sample entries are added, update UI and generate initial prediction history
+                    // This simulates the automatic update behavior for the sample data
+                    let tempCount = 0;
+                    gameState.entries.forEach((card, index) => {
+                        tempCount += getCardCountContribution(card);
+                        const predictionForCard = getPrediction.call({ gameState: { ...gameState, entries: gameState.entries.slice(0, index + 1) } }); // Simulate prediction at each step
+
+                        if (predictionForCard) {
+                            gameState.predictionHistory.push({
+                                prediction: predictionForCard.prediction,
+                                countResult: tempCount, // Use the running count at this point
+                                startIndex: index,
+                                endIndex: index
+                            });
+                        }
+                    });
+
+
+                    updateRoadmap();
+                    updateChart();
+                    updateStats();
+                    updateHistory();
+                    // Initial recommendation calculation based on current state
+                    updateRecommendation();
+                }
+
+                init();
+            }
+
+            // Check authentication status on page load
+            checkExistingAuth().then(() => {
+                if (authOverlay.style.display !== 'none') {
+                    authKeyInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
